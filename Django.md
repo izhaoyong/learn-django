@@ -105,8 +105,48 @@ project路由可以算是全局路由，在startproject创建的目录下，文�
 
 - 路由中的参数
 
-  一般写到path的route参数中，然后在处理函数中指明相应的
+  一般写到path的route参数中，然后在处理函数中指明相应的处理函数。
+
+  > __polls/urls.py__文件
+
+  ```
+  from django.urls import path
+  
+  from . import views
+  
+  urlpatterns = [
+      # ex: /polls/
+      path('', views.index, name='index'),
+      # ex: /polls/5/
+      path('<int:question_id>/', views.detail, name='detail'),
+      # ex: /polls/5/results/
+      path('<int:question_id>/results/', views.results, name='results'),
+      # ex: /polls/5/vote/
+      path('<int:question_id>/vote/', views.vote, name='vote'),
+  ]
+  ```
+
+  > __polls/views.py__文件
+
+  ```
+  def detail(request, question_id):
+      return HttpResponse("You're looking at question %s." % question_id)
+  
+  def results(request, question_id):
+      response = "You're looking at the results of question %s."
+      return HttpResponse(response % question_id)
+  
+  def vote(request, question_id):
+      return HttpResponse("You're voting on question %s." % question_id)
+  ```
+
+  从上面两个文件可以看出来，在路径上设置的参数，需要在处理函数中制定参数
+
+
+
+
+
+
 
 - 获取GET请求参数
-
 - 获取POST请求参数

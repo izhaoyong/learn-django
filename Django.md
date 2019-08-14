@@ -385,7 +385,7 @@ __NAME__：数据库名称，如果是SQLite值是文件的绝对路径。
 
 数据库来源要么是从0开始构建，要么是从现有的数据库导入。这里我们分不同情况讨论。
 
-1. __从0构建数据库__
+__从0构建数据库__
 
 Django的orm相关知识中，使用数据模型来描述数据。也就是数据库结构设计和附加的其它元数据。
 
@@ -466,7 +466,48 @@ __说明__
 
 `migrate`命令还有其它的参数，比如说指定database等。使用时在查看。
 
-2. __现有库导入__
+Django默认使用的数据库是sqlite，但很多公司会使用mysql等数据库，所以还需要测试一下怎么连接mysql。
+
+##### 连接MySQL
+
+连接MySQL的操作跟sqlite有很大的区别。连接sqlite数据库时，`NAME`字段对应的是sqlite数据库的文件地址。而mysql是相应的数据的名字。所以我们需要先创建相应的数据库。然后在进行相应的数据库迁移。
+
+__连接配置__
+
+>project_name/settings.py，这里project_name是mysite
+
+```
+DATABASES = {
+	# 'default': {
+	#     'ENGINE': 'django.db.backends.sqlite3',
+	#     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+	# }
+	'default': {
+		'ENGINE': 'django.db.backends.mysql',
+		'NAME': 'soda', # 数据库名称
+		'USER': 'root', # 数据库登录用户
+		'PASSWORD': 'password', # 数据库登录密码
+		'HOST': '127.0.0.1', # 数据库地址
+		'PORT': '3306', # 端口
+	}
+}
+```
+
+做好后，我们可以使用__inspectdb__命令来查看数据库结构。
+
+```
+python manage.py inspectdb > polls/models.py
+```
+
+运行上面命令后，会创建相应的models文件。我们可以通过__shell__命令来查看是否入成功了。
+
+`inspectdb`命令只是根据数据库结构来创建models文件，但是还没有进行迁移数据。迁移数据还是需要migrate命令。但是命令需要加上``--fake-initial``选项。
+
+```
+python manage.py migrate --fake-initial
+```
+
+> 说明：加上`--fake-initial`选项，是为了应对数据库里已经有数据时不会报错，同时不会修改原来的数据库。因为__migrate__命令会在没有数据库结构根据models.py文件来创建相应的数据库。但是如果有了就不需要创建了。
 
 
 

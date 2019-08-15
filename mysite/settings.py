@@ -38,6 +38,7 @@ INSTALLED_APPS = [
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
 	'polls', # HTML模板在应用里的方式
+	'storage',
 ]
 
 MIDDLEWARE = [
@@ -75,11 +76,11 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-	# 'default': {
-	#     'ENGINE': 'django.db.backends.sqlite3',
-	#     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-	# }
 	'default': {
+	    'ENGINE': 'django.db.backends.sqlite3',
+	    'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+	},
+	'soda': {
 		'ENGINE': 'django.db.backends.mysql',
 		'NAME': 'soda',
 		'USER': 'root',
@@ -88,6 +89,14 @@ DATABASES = {
 		'PORT': '3306',
 	}
 }
+
+DATABASES_APPS_MAPPING = {
+	# 'app_name': 'database_name'
+	'storage': 'defalut',
+	'polls': 'soda',
+}
+
+DATABASSE_ROUTERS = ['mysite.database_router.DatabaseAppsRouter']
 
 
 # Password validation

@@ -2,11 +2,14 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.template import loader
+from .models import User
 
 # Create your views here.
 
 
 def index(request):
+	print(User.objects.using('soda').all())
+
 	template = loader.get_template('polls/index.html')
 	context = {}
 	return HttpResponse(template.render(context, request))

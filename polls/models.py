@@ -15,6 +15,7 @@ class BookInfo(models.Model):
 	info = models.TextField(blank=True, null=True)
 
 	class Meta:
+		app_label = 'polls'
 		managed = False
 		db_table = 'book_info'
 
@@ -41,6 +42,7 @@ class BookInfoLocal(models.Model):
 	relative_book_source_id = models.CharField(max_length=1000, blank=True, null=True)
 
 	class Meta:
+		app_label = 'polls'
 		managed = False
 		db_table = 'book_info_local'
 
@@ -52,6 +54,7 @@ class MovieInfo(models.Model):
 	info = models.TextField(blank=True, null=True)
 
 	class Meta:
+		app_label = 'polls'
 		managed = False
 		db_table = 'movie_info'
 
@@ -83,6 +86,7 @@ class MovieInfoLocal(models.Model):
 	confirmed = models.IntegerField(blank=True, null=True)
 
 	class Meta:
+		app_label = 'polls'
 		managed = False
 		db_table = 'movie_info_local'
 
@@ -94,6 +98,7 @@ class TvInfo(models.Model):
 	info = models.TextField(blank=True, null=True)
 
 	class Meta:
+		app_label = 'polls'
 		managed = False
 		db_table = 'tv_info'
 
@@ -125,6 +130,7 @@ class TvInfoLocal(models.Model):
 	relative_tv_source_id = models.CharField(max_length=1000, blank=True, null=True)
 
 	class Meta:
+		app_label = 'polls'
 		managed = False
 		db_table = 'tv_info_local'
 
@@ -141,5 +147,6 @@ class User(models.Model):
 		return self.username
 
 	class Meta:
+		app_label = 'polls'
 		managed = False
 		db_table = 'user'

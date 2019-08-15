@@ -511,8 +511,177 @@ python manage.py migrate --fake-initial
 
 
 
+---
+
+在连接数据库时报错了，说是连接引擎不对，尝试了一些方法没有成功，最后就将Django的版本固定到了2.1。然后就成功了。
+
+安装pymysql：
+
+```
+pip install pymysql -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+```
+
+安装文件后，还需要做一些配置
+
+> project_name/init.py，这里是mysite/init.py文件
+
+```
+import pymysql
+
+pymysql.install_as_MySQLdb()
+```
+
+安装2.1版本的django
+
+```
+pip install django==2.1
+```
+
+#### 多数据库连接
+
+一个服务可能同时连接多个数据库，有时一个应用也可以同时连接多个数据库。所以连接多个数据库也是其中的一种情况。
+
+1. 首先我们需要在settings.py文件中添加数据库连接配置
+
+> project_name/settings.py文件，这里project_name的值是mysite
+
+```
+...
+DATABASES = {
+	'default': {
+	    'ENGINE': 'django.db.backends.sqlite3',
+	    'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+	},
+	'soda': {
+		'ENGINE': 'django.db.backends.mysql',
+		'NAME': 'soda',
+		'USER': 'root',
+		'PASSWORD': 'password',
+		'HOST': '127.0.0.1',
+		'PORT': '3306',
+	}
+}
+...
+```
+
+如上所示，在`DATABASES`字段添加了新的数据库连接配置。
+
+2. 然后需要创建数据库和app的对应的映射关系
+
+> project_name/setttins.py文件，这里project_name的值是mysite
+
+```
+DATABASES_APPS_MAPPING = {
+	# 'app_name': 'database_name'
+	'storage': 'defalut',
+	'polls': 'soda',
+}
+```
+
+>>key是app_name，value是数据库 
+
+3. 还需要创建数据库路由规则：DATABASE_ROUTERS
+
+> project_name/settings.py文件，project_name是mysite
+
+```
+DATABASE_ROUTERS = ['project_name.database_router.DatabaseAppsRouter']
+这里是：
+	DATABASE_ROUTERS = ['mysite.database_router.DatabaseAppsRouter']
+```
+
+然后在相应的文件里定义相关的函数`db_for_read`、 `db_for_write`、 `allow_relation`、 `allow_migrate`，在这些函数里定义如何处理应用和数据库的关联。
+
+> mysite/database_router.py文件，其中mysite是project_name的值
+
+```
+from django.conf import settings
+
+
+DATABASES_APPS_MAPPING = settings.DATABASES_APPS_MAPPING
+
+class DatabaseAppsRouter(object):
+	def db_for_read(self, model, **hints):
+		if model._meta.app_label in DATABASES_APPS_MAPPING:
+			return DATABASES_APPS_MAPPING[model._meta.app_label]
+		return None
+
+	def db_for_write(self, model, **hints):
+		if model._meta.app_label in DATABASES_APPS_MAPPING:
+			return DATABASES_APPS_MAPPING[model._meta.app_label]
+		return None
+
+	def allow_relation(self, obj1, obj2, **hints):
+		db_obj1 = DATABASES_APPS_MAPPING.get(obj1._meta.app_label)
+		db_obj2 = DATABASES_APPS_MAPPING.get(obj2._meta.app_label)
+
+		if db_obj1 and db_obj2:
+			if db_obj1 == db_obj2:
+				return True
+			else:
+				return False
+		return None
+
+	def allow_syncdb(self, db, model):
+		if db in DATABASES_APPS_MAPPING.values():
+			return DATABASES_APPS_MAPPING.get(model._meta.app_label) == db
+		elif model._meta.app_label in DATABASES_APPS_MAPPING:
+			return False
+		return None
+
+	def allow_migrate(self, db, app_label, model=None, **hints):
+		if db in DATABASES_APPS_MAPPING.values():
+			return DATABASES_APPS_MAPPING.get(app_label) == db
+		elif app_label in DATABASES_APPS_MAPPING
+			return False
+		return None
+
+```
+
+这里models的_meta属性中的app_label需要我们在相应的models中设置。比如说：
+
+```
+DATABASES_APPS_MAPPING = {
+	# 'app_name': 'database_name'
+	'storage': 'defalut',
+	'polls': 'soda',
+}
+```
+
+这里的app_name是storage，所以需要storage应用内的models.py文件中的模型meta属性中的app_label的值是storage。
+
+```
+class Question(models.Model):
+	question_text = models.CharField(max_length=200)
+
+	def __str__(self):
+		return self.question_text
+
+	class Meta:
+		app_label = 'storage'
+```
+
+经过上面的操作，数据库和应用就可以绑定在一起了。
+
+#### 数据库操作
+
+单数据库操作时可以按照官方文档上的操作来做。当是多数据库时，在操作时需要指定具体的数据。
+
+比如说上面我们设定的多数据库连接的storage数据库。从storage数据中引入了User表，然后使用时是
+
+```
+User.objects.using('storage').all()
+```
+
+必需要加上`using('storage')`操作才是真正的操作数据库。
 
 
 
+
+
+### 日志
+
+ 
 
 ### 配置文件
+

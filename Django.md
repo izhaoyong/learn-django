@@ -685,3 +685,36 @@ User.objects.using('storage').all()
 
 ### 配置文件
 
+
+
+### 项目依赖
+
+1. 虚拟环境
+
+    当在`virtualenv`环境下时，我们可以使用`pip freeze > requirements.txt`命令来生成依赖文件。
+
+2. 扫描项目
+
+    我们并不一定永远都是在有虚拟环境下工作的，所以虚拟环境具有一定的要求。可以使用`pipreqs`来解决这样的问题。
+
+    > 安装pipreqs
+
+    ```
+    pip install pipreqs
+    ```
+
+    > 创建依赖文件
+
+    ```
+    pipreqs . // 点是工程路径
+    ```
+
+    上面中的[**.**]是工程的路径，如果不是在工程下，需要指定后面就需要指定工程的路径了。
+
+3. 安装依赖
+
+    ```
+    pip install -r /django_project_path/requriements.txt 
+    ```
+
+    

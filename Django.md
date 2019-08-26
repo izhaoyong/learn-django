@@ -718,3 +718,83 @@ User.objects.using('storage').all()
     ```
 
     
+
+### 相关问题
+
+1. sqlite3版本问题
+
+    python一般会自带sqlite3。但是这个可能跟django要求的sqlite3版本不一致，从而导致问题。
+
+    先查看当前python版本使用的sqlite3版本
+
+    ```
+    python
+    >>>import sqlite3
+    >>>sqlite3.sqlite_version
+    ```
+
+    运行上面命令就可以看到当前python使用的sqlite3的版本了。
+
+    django 2.2及以后的版本要求sqlite3 > 3.8.3，但是python自带的只有3.7.3。所以我们需要安装新版本的sqlite3。
+
+### 线上部署
+
+开发好之后就需要部署上线了。但是部署时就不能仅仅使用`python manage.py runserver`命令。这个命令只适用于在本地开发时使用。
+
+WSGI是一种协议，一边连接着服务器，一边连接着Django应用。这样能很好的做到扩展。比如说同一个上游代理，后面可以跑很多个应用。只要这个应用实现了WSGI协议就可以。
+
+Django在开发时，会自动开启一个WSGI服务器，但是性能不好。在线上会有问题。但是有一些专门的工具来做这件事。
+
+**uWSGI**、**gunicorn** 和 **bjoern** 都是实现了`uwsgi`、`wsgi`、`http`等协议的工具。尤以uWSGI使用比较广。uWSGI是一个实现了一些协议的服务器软件。一边连着web服务，一边连着Python开发的应用。
+
+**uWSGI**
+
+uWSGI是一个实现了uwsgi和WSGI协议的软件。可以通过命令行的方式启动，也可以通过启动文件来启动。但是都需要做一些相关配置
+
+- chdir=// # 指定Python项目目录
+- home= # 指定虚拟机环境
+- wsgi-file= # 加载WSGI文件
+- socket= 指定uwsgi的客户端将要连接的socket的路径（使用UNIX socket的情况）或者地址（使用网络地址的情况）。
+- callable= # uWSGI加载的模块中哪个变量将被调用
+- master=true/false # 指定启动主进程
+- processes # 设置工作进程的数量
+- threads # 设置每个工作进程的线程数
+- vacuum=true # 当服务器退出时自动删除unix socket文件和pid文件
+- logfile-chmod=644 # 指定日志文件的权限
+- daemonize=%(chdir)/xxx.log # 进程在后台运行，并将日志打印到指定文件
+- pidfile=%(chdir)/xxx.pid # 在失去权限前，将主进程pid写到指定的文件
+- uid=xxx # uWSGI服务器运行时的用户id
+- gid=xxx # uWSGI服务器运行时的用户组id
+- Procname-prefix-spaced=xxx # 指定工作进程名称的前缀
+
+> django_uwsgi.ini文件示例
+
+```
+[uwsgi]
+chdir=/home/git/www/cloudmonitor # 指定项目目录
+home=/home/git/www/cloudmonitor/.env # 指定python虚拟环境
+wsgi-file=manager.py # 指定加载的WSGI文件
+callable=app # 指定uWSGI加载的模块中哪个变量将被调用
+master=true # 启动主线程
+processes=4 # 设置工作进程的数量
+threads=2 # 设置每个工作进程的线程数
+socket=127.0.0.1:8888 # 指定socket地址
+vacuum=true # 当服务器退出时自动删除unix socket文件和pid文件
+logfile-chmod=644 # 指定日志文件的权限
+daemonize=%(chdir)/cloudmonitor.log # 进程在后台运行，并将日志打印到指定文件
+pidfile=%(chdir)/cloudmonitor.pid # 在失去权限前，将主进程pid写到指定的文件
+uid=git # uWSGI服务器运行时的用户id
+gid=git # uWSGI服务器运行时的用户组id
+procname-prefix-spaced=cloudmonitor # 指定工作进程名称的前缀
+```
+
+如果是socket启动，在配置nginx时，也同样是启动socket端口。如果是http方式启动，nginx配置是也需要http方式启动。
+
+
+
+
+
+### 参考
+
+[Django + uWSGI + Nginx详解](https://www.jianshu.com/p/1c50b15b143a)
+

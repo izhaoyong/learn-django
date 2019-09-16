@@ -677,6 +677,28 @@ User.objects.using('storage').all()
 
 
 
+### 缓存
+
+当网站访问量比较少时，无所谓。但是当网站访问量比较大时就需要缓存了。比如说渲染页面。访问量比较大时，如果没有缓存，每次请求都会访问数据库，导致数据库压力大。但是如果对于访问过的页面进行缓存，就可以减少这样的压力。
+
+```
+given a URL, try finding that page in the cache
+if the page is in the cache:
+    return the cached page
+else:
+    generate the page
+    save the generated page in the cache (for next time)
+    return the generated page
+```
+
+缓存可以存放于数据库、文件系统，或者直接放在内存（一般推荐）很影响性能。
+
+常用的缓存工具。
+
+**Memcached**
+
+
+
 
 
 ### 日志

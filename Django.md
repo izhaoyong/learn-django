@@ -695,7 +695,291 @@ else:
 
 常用的缓存工具。
 
-**Memcached**
+#### Memcached
+
+是一个基于内存的缓存服务器。有两种绑定：`python-memcached`和`pylibmc`。可以自行决定使用哪一种绑定。
+
+选择好之后，在配置文件中进行相关的设置。
+
+> /mysite/settings.py
+
+```
+CACHES = {
+	'defalut': {
+		'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+		'LOCATION': '127.0.0.1:11211',
+	}
+}
+```
+
+- BACKEND：django.core.cache.backends.memcached.MemcachedCache或者django.core.cache.backends.memcached.PyLibMCCache
+- LOCATION：
+    - ip:port。其中ip是memcached守护进程的IP地址，port是memcached守护进程监听的端口；
+    - unix:path。其中path是Memcached Unix套接字文件的路径。
+
+比如使用`python-memcached`绑定，在localhost(127.0.0.1)端口11211上运行：
+
+```
+CACHES = {
+	'defalut': {
+		'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+		'LOCATION': '127.0.0.1:11211',
+	}
+}
+```
+
+Memcached可通过本地Unix套接字文件`/tmp/memcached.sock`使用python-memcached绑定：
+
+```
+CACHES = {
+	'defalut': {
+		'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+		'LOCATION': 'unix:/tmp/memcached.sock',
+	}
+}
+```
+
+当使用`pylibmc`时，可以省略`unix:/`前缀。
+
+基于内存的缓存有一个缺点，就是服务器崩溃时，缓存的数据就失效了。
+
+#### 数据库缓存
+
+需要将配置文件中的BACKEND修改一下
+
+> mysite/settings.py
+
+```
+CACHES = {
+ `   'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'my_cache_table',
+    }
+}
+```
+
+- **BACKEND**设置为`django.core.cache.backends.db.DatabaseCache`
+- **LOCATION**：设置为 数据库表的``表名``。比如上面的`my_cache_table`
+
+**创建缓存表**
+
+使用数据库缓存钱，必须先创建缓存表
+
+```
+python manage.py createcachetable
+```
+
+**多数据库**
+
+需要配置一下路由。
+
+
+
+#### 文件系统缓存
+
+需要将BACKEND设置为`django.core.cache.backends.filebased.FileBasedCache`，并将LOCATION设置为一个合适的路径。
+
+> mysite/settings.py
+
+```
+# *nix系统
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/tmp/django_cache',
+    }
+}
+```
+
+```
+# windows系统
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': 'c:/foo/bar',
+    }
+}
+```
+
+配置好之后需要确保LOCATION指向的路径是可以访问的。
+
+**本地内存缓存**
+
+```
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+```
+
+**虚拟缓存(用于开发模式)**
+
+```
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
+```
+
+
+
+#### Redis缓存
+
+Django自身并没有带redis缓存，需要我们安装相应的软件：`django-redis`
+
+```
+pip install django-redis
+```
+
+工程配置文件
+
+> mysite/settings.py
+
+```
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+```
+
+
+
+
+
+**缓存参数**
+
+- **TIMEOUT**：缓存超时时间(单位秒)，默认300s
+
+- **OPTIONS**：
+
+    - **MAX_ENTRIES**：缓存最大个数
+    - **CULL_FREQUENCY**：当**CULL_FREQUENCY**达到最大条目时，需要淘汰的条目数。实际比率为`1/CULL_FREQUENCY`，比如说CULL_FREQUENCY=2时，有一半会被删除。
+
+- **KEY_PREFIX**：将自动包含到Django服务器使用的所有缓存键的字符串
+
+- **VERSION**：缓存键的默认版本号
+
+- **KEY_FUNCTION**：
+
+    这个例子中，文件系统被设置成60秒超时时间，最大容量为1000条
+
+    ```
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'LOCATION': '/var/tmp/django_cache',
+            'TIMEOUT': 60,
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000
+            }
+        }
+    }
+    ```
+
+    使用python-memcached后端，大小限制在
+
+**站点缓存**
+
+**视图缓存**
+
+**模板片段缓存**
+
+**底层缓存API**
+
+- **访问缓存**
+
+    **django.core.cache.caches**
+
+    可以通过类似字典一样的object：**django.core.cache.caches**对象访问在`CACHE`配置的缓存。类似于数据库的配置。
+
+    ```
+    from django.core.cache import caches
+    ```
+
+    **django.core.cache.cache**
+
+    作为快捷方式，默认缓存可以通过**django.core.cache.cache**引用：
+
+    ```
+    from django.core.cache import cache
+    ```
+
+    这个对象等价于**caches['default']**。
+
+- **基本用法**
+
+    **cache.set**(key, value, timeout=DEFAULT_TIMEOUT, version=None)
+
+    ```
+    cache.set('my_key', 'hello', 30)
+    ```
+
+    **cache.get**(key, default=None, version=None)
+
+    ```
+    cache.get('my_key')
+    ```
+
+    **key**是一个字符串，value可以是任何picklable形式的Python对象
+
+    如果对象不再缓存中，**cache.get()**将返回**None**。
+
+    `cache.get()`可以带一个默认参数。如果对象不在缓存中，将返回指定的值。
+
+    ```
+    cache.get('my_key', 'has expired')
+    # 如果my_key不存在，将返回has expired
+    ```
+
+    **cache.add**(key, value, timeout=DEFAULT_TIMEOUT, version=None)
+
+    于set类似。如果键不存在则添加，键存在不更新。
+
+    **cache.get_or_set**(key, default, timeout=DEFAULT_TIMEOUT, version=None)
+
+    有键返回，无键则设置新的值
+
+    **cache.get_many**(keys, version=None)
+
+    返回一个字典。这些键真实存在缓存中（并且没过期）
+
+    **cache.set_many**(dict, timeout)
+
+    传递多个键值对来设置缓存
+
+    **cache.delete**(key, version=None)
+
+    删除某个键
+
+    **cache.delete_many**(keys, version=None)
+
+    一次删除多个键。参数是key的列表
+
+    **cache.clear**()
+
+    清除所有的key
+
+    **cache.touch**(key, timeout=DEFAULT_TIMEOUT, version=None)
+
+    更新过期时间
+
+    如果更新成功，返回True，否则反水False。
+
+    **cache.incr**(key, delta=1, version=None)：自增key
+
+    **cache.decr**(key, delta=1, version=None)：自减key
+
+    **cache.close**()：2.1版本之后新加的
+
+    如果缓存后端实现了`close()`方法，可以关闭和缓存的连接。
 
 
 

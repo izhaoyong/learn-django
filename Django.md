@@ -850,6 +850,29 @@ CACHES = {
 }
 ```
 
+#### 多缓存设置
+
+就是一次设置多个缓存后端，但是后端可以相同也可以不同。
+
+> mysite/settings.py
+
+```
+CACHES = {
+	'default': {
+		'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+		'LOCATION': '127.0.0.1:11211',
+		'KEY_PREFIX': 'my',
+	},
+	"redis": {
+		"BACKEND": "django_redis.cache.RedisCache",
+		"LOCATION": "redis://127.0.0.1:6379",
+		"OPTIONS": {
+			"CLIENT_CLASS": "django_redis.client.DefaultClient",
+		}
+	}
+}
+```
+
 
 
 

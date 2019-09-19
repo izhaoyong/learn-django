@@ -1010,7 +1010,47 @@ CACHES = {
 
 ### 日志
 
- 
+ Django使用内置的**logging**模块处理系统日志。
+
+#### 组成元素
+
+**Loggers**
+
+logger是日志系统的入口。可以配置**日志级别**
+
+- **DEBUG**：排查故障时使用的低级别系统信息
+- **INFO**：一般的系统信息
+- **WARNING**：描述发生了一些小问题的信息
+- **ERROR**：描述系统发生了大问题的信息
+- **CRITICAL**：描述系统发生严重问题的信息
+
+每一条写入logger的消息都是一条`日志`记录。包含了*日志级别*，代表了消息的严重程度。
+
+当logger收到消息时，会将自己的日志级别跟消息的日志级别对比。如果消息的日志级别匹配或者高于logger的日志级别，会进一步处理，否则忽略。
+
+当logger处理了一条消息后，会传递给*Handler*
+
+**Handlers**
+
+Handler是决定如何处理logger中每一条消息的引擎。描述特定的日志行为，比如把消息输出到屏幕、文件或网络socker。
+
+和logger一样，handler也有*日志级别*的概念。如果一条日志记录级别匹配或高于handler的日志级别，消息会被处理，否则忽略。
+
+一个logger可以有多个handler，每一个handler可以有不同的日志级别。
+
+**过滤器**
+
+在日志记录从logger传到handler的过程中，使用filter来做额外的控制。
+
+**Formatters**
+
+日志记录最终需要以文本来呈现。Formatter描述了文本的格式。一个formatter通常由包含LogRecord attributes的 Python 格式化字符串组成，不过也可以以特定的格式来配置自定义的formatter。
+
+#### 使用
+
+
+
+
 
 ### 配置文件
 
